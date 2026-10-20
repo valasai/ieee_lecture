@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>IEEE STEP 2026 — From Campus to Career</title>
+<style>
+  /* Palette */
+  :root {
+    --navy: #071433;
+    --ink: #f4f7ff;
+    --blue: #3d8bff;
+    --teal: #2ee6c7;
+    --amber: #ffb020;
+    --card: #102454;
+    --line: rgba(255,255,255,.2);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--navy); color: var(--ink);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden;
+  }
+  h1, h2, button, .stat { font-family: inherit; font-weight: 800; }
+  button { color: inherit; }
+  .progress { position: fixed; top: 0; left: 0; right: 0; height: 8px; background: rgba(255,255,255,.08); z-index: 20; }
+  .progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue), var(--amber)); transition: width .4s ease; }
+  .deck { height: 100%; position: relative; touch-action: pan-y; }
+  .slide {
+    position: absolute; inset: 0; display: none;
+    padding: 6vh 7vw 7vh;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 2vh 2vw; align-items: center;
+  }
+  .slide.on { display: grid; }
+  .slide.solo { grid-template-columns: 1fr; }
+  .kicker { margin: 0; color: var(--teal); letter-spacing: .14em; text-transform: uppercase; font-size: 16px; font-weight: 700; }
+  h1 { margin: .2em 0; font-size: 32px; line-height: 1.05; }
+  h2 { margin: .15em 0; font-size: 28px; line-height: 1.08; }
+  .body { margin: .4em 0 0; color: var(--ink); line-height: 1.35; font-size: 19px; max-width: 40ch; }
+  .speaker { margin-top: 1.6em; font-size: 28px; font-weight: 800; }
+  .art svg { width: 100%; height: auto; max-height: 42vh; }
+  .slide.skill { grid-template-columns: 1.35fr .65fr; }
+  .slide.skill .art { display: flex; align-items: center; justify-content: center; height: 100%; }
+  .slide.skill .art svg { max-height: 84vh; width: auto; max-width: 100%; }
+  button.tap, button.stat, button.dot, button.sem, button.card, button.pair, button.copy, button.reset, button.edge, button.tool {
+    min-width: 56px; min-height: 56px;
+    border: 2px solid var(--line); border-radius: 14px;
+    background: var(--card); cursor: pointer;
+  }
+  button.tap:active, button.stat:active, button.card:active, button.sem:active, button.pair:active, button.copy:active, button.reset:active, button.edge:active, button.tool:active, button.dot:active {
+    background: var(--blue); color: #041018;
+  }
+  button.stat { background: var(--amber); color: #1a1204; border: 0; padding: 0 16px; font-size: 22px; }
+  .poll .choice { min-height: 90px; width: 100%; font-size: 22px; font-weight: 800; text-align: left; padding: 24px 16px; margin-top: 8px; background: var(--card); border: 2px solid var(--line); border-radius: 14px; }
+  .barline { height: 10px; background: #0a1a40; border-radius: 6px; margin: 4px 0 8px; }
+  .barline > i { display: block; height: 100%; width: 0; background: var(--teal); border-radius: 6px; transition: width .35s ease; }
+  .cards { display: grid; gap: 10px; }
+  button.card { text-align: left; padding: 12px 14px; font-size: 18px; min-height: 120px; }
+  button.card.open { border-color: var(--amber); }
+  .reveal { display: none; color: var(--ink); font-weight: 600; font-size: 16px; margin-top: 6px; }
+  button.card.open .reveal { display: block; }
+  .flip-scene { perspective: 800px; min-height: 140px; }
+  .flip {
+    position: relative; min-height: 140px; transform-style: preserve-3d; transition: transform .6s ease;
+    cursor: pointer; border: 0; background: transparent; width: 100%; text-align: left; padding: 0;
+  }
+  .flip .face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    background: var(--card); border: 2px solid var(--line); border-radius: 14px;
+    padding: 16px; font-size: 20px; font-weight: 700;
+  }
+  .flip .back { transform: rotateY(180deg); border-color: var(--teal); }
+  .flip.flipped { transform: rotateY(180deg); }
+  .flip .back { visibility: hidden; }
+  .flip.flipped .front { visibility: hidden; }
+  .flip.flipped .back { visibility: visible; }
+  .slide.habits { grid-template-columns: 1.45fr .55fr; }
+  .rates { display: grid; gap: 10px; margin-top: 1.2vh; }
+  .rate { display: grid; grid-template-columns: 16rem repeat(5, 56px); align-items: center; column-gap: 10px; }
+  .rate .skill-name { min-height: 56px; text-align: left; font-weight: 700; font-size: 20px; background: transparent; border-color: transparent; }
+  .rate .skill-name.on { border-color: var(--amber); color: var(--amber); }
+  button.dot { width: 56px; height: 56px; border-radius: 50%; padding: 0; font-weight: 800; }
+  button.dot.on, button.sem.on { background: var(--amber); color: #1a1204; }
+  .msg { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 16px 18px; white-space: pre-wrap; font-size: clamp(18px, 1.4vw, 26px); line-height: 1.45; max-width: 46ch; }
+  .slide.people { grid-template-columns: 1.25fr .75fr; align-items: center; }
+  .slide.people .art { display: flex; align-items: center; justify-content: center; }
+  .slide.people .art svg { max-height: 70vh; width: 100%; }
+  .action { margin-top: 12px; color: var(--teal); font-weight: 800; font-size: clamp(20px, 1.6vw, 32px); }
+  .route { width: 100%; }
+  .draw { fill: none; stroke: #2ee6c7; stroke-width: 6; stroke-linecap: round; }
+  .slide.on .draw { stroke-dasharray: 16 12; animation: dash 1.1s linear infinite; }
+  .traveler { offset-rotate: 0deg; animation: travel 4.5s linear infinite; }
+  @keyframes travel { to { offset-distance: 100%; } }
+  .flight { stroke-dasharray: 7 6; }
+  .slide.on .flight { animation: dash .8s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -80; } }
+  .flight.hot, .pin.hot { stroke: var(--amber); }
+  .pin.hot { fill: var(--amber); }
+  .miles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .mile { background: var(--card); border-radius: 10px; padding: 6px; font-size: 14px; font-weight: 700; border-top: 4px solid var(--teal); }
+  .sems { display: flex; flex-wrap: wrap; gap: 8px; }
+  .slide.close { grid-template-columns: 1.3fr .7fr; align-items: center; }
+  .tasks button.task { display: block; width: 100%; text-align: left; margin-top: 12px; padding: 14px 18px; font-size: clamp(26px, 2vw, 40px); line-height: 1.25; }
+  .win { transform-origin: 180px 160px; animation: win 1.1s ease-in-out infinite; }
+  @keyframes win { 50% { transform: scale(1.06); } }
+  .rays { transform-origin: 180px 150px; animation: spin 8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  button.task.done { text-decoration: line-through; }
+  button.task.done { animation: ring .6s ease; }
+  @keyframes ring { 50% { box-shadow: 0 0 0 4px var(--teal); } }
+  .num, .timer { position: fixed; z-index: 20; font-weight: 800; }
+  .num { top: 16px; right: 18px; }
+  .timer { top: 14px; left: 50%; transform: translateX(-50%); color: var(--teal); display: none; background: #0a1a40; padding: 6px 12px; border-radius: 10px; }
+  .timer.show { display: block; }
+  .timer.amber { color: var(--amber); }
+  .timer.red { color: #ff5a5a; }
+  button.edge { position: fixed; top: 50%; transform: translateY(-50%); z-index: 20; width: 56px; font-size: 32px; }
+  #prev { left: 8px; } #next { right: 8px; }
+  .tools { position: fixed; top: 12px; left: 12px; z-index: 20; display: flex; gap: 8px; }
+  .notes {
+    display: none; position: fixed; left: 0; right: 0; bottom: 0; height: 33vh; z-index: 25;
+    background: rgba(7, 20, 51, .92); border-top: 2px solid var(--amber); padding: 12px 8vw; overflow: auto;
+  }
+  .notes.open { display: block; }
+  .notes li { margin: .2em 0; }
+  .pollbox { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 3vh 2vw; }
+  #poll { display: flex; gap: 2.5vw; height: 46vh; }
+  #poll-reset { margin-top: 2vh; }
+  #poll .col { flex: 1; display: flex; flex-direction: column; align-items: center; background: none; border: 0; padding: 0; font: inherit; color: var(--ink); cursor: pointer; min-height: 0; }
+  #poll .col b { font-size: 44px; line-height: 1.2; }
+  #poll .col .track { flex: 1; width: 100%; display: flex; align-items: flex-end; border-bottom: 3px solid var(--line); }
+  #poll .col .track i { display: block; width: 100%; min-height: 6px; border-radius: 10px 10px 0 0; transition: height .35s ease; }
+  #poll .col.c0 i { background: #2f6fe4; }
+  #poll .col.c1 i { background: #e8731a; }
+  #poll .col.c2 i { background: #8a4fd6; }
+  #poll .col em { font-style: normal; font-weight: 800; font-size: 22px; text-align: center; margin-top: 8px; min-height: 2.4em; }
+  #poll-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .unverified { display: none; width: 12px; height: 12px; border-radius: 50%; background: var(--amber); }
+  body.notes-open .unverified { display: inline-block; }
+  .overview { display: none; position: fixed; inset: 0; z-index: 30; background: rgba(5,12,32,.96); overflow: auto; padding: 70px 4vw 4vh; }
+  .overview.open { display: block; }
+  .thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  button.thumb { position: relative; height: 140px; overflow: hidden; padding: 0; text-align: left; }
+  button.thumb .scale { position: absolute; top: 0; left: 0; width: 1600px; height: 900px; transform: scale(.12); transform-origin: top left; pointer-events: none; }
+  .slide.on .in { animation: rise .45s ease both; animation-delay: calc(var(--i, 0) * 70ms); }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @media (min-width: 1200px) {
+    h1 { font-size: clamp(66px, 4.2vw, 84px); }
+    h2 { font-size: clamp(36px, 2.6vw, 60px); }
+    .body { font-size: clamp(28px, 1.8vw, 56px); }
+    .speaker { font-size: clamp(48px, 3.2vw, 84px); margin-top: 0.9em; }
+  }
+  @media (max-width: 800px) {
+    .slide.on { grid-template-columns: 1fr; align-content: start; overflow: auto; padding-top: 72px; }
+    .body { font-size: 19px; }
+    h1, h2 { font-size: 26px; }
+    .thumbs { grid-template-columns: 1fr 1fr; }
+    .miles { grid-template-columns: 1fr 1fr; }
+    .rate { grid-template-columns: 1fr repeat(5, 44px); column-gap: 6px; }
+    button.dot { width: 44px; height: 44px; }
+    .slide.skill .art svg { max-height: 46vh; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slide.on .in, .slide.on .draw, .slide.on .flight, .traveler, .win, .rays, button.task.done, .flip { animation: none; transition: none; }
+    .flip.flipped .front { display: none; }
+    .flip.flipped .back { transform: none; position: relative; }
+  }
+</style>
+</head>
+<body>
+<noscript><div style="position:fixed;inset:0;z-index:99;background:#fff;color:#0b1730;padding:40px;font:28px/1.4 -apple-system,Helvetica,sans-serif"><b>This talk needs JavaScript.</b><br>You are probably in a file preview (Files, Mail, WhatsApp). Open this file in Safari or Chrome instead.</div></noscript>
+<div class="progress"><span id="bar"></span></div>
+<div class="tools">
+  <button class="tool" id="grid" type="button" aria-label="All slides">⊞</button>
+  <button class="tool" id="full" type="button" aria-label="Fullscreen">⛶</button>
+</div>
+<div class="timer" id="timer">0:00</div>
+<div class="num" id="num"></div>
+<button class="edge" id="prev" type="button" aria-label="Previous">‹</button>
+<button class="edge" id="next" type="button" aria-label="Next">›</button>
+<div class="deck" id="deck"></div>
+<div class="notes" id="notes"><ul id="note-list"></ul><div id="poll-controls"></div></div>
+<div class="overview" id="overview"><div class="thumbs" id="thumbs"></div></div>
+
+<script>
+/* All editable talk content lives here. */
+const DATA = {
+  /* Empty until a handout URL exists. Placeholder QR is shown when this is "". */
+  HANDOUT_URL: "",
+  /* Months per semester, and the semester when applications open. */
+  MONTHS_PER_SEMESTER: 6,
+  APPLY_SEMESTER: 7,
+  pollKey: "ieee-step-2026-poll",
+  pollOptions: ["Industry", "Master's or PhD", "Abroad"],
+  pathNodes: [
+    "One project, third year",
+    "Internship, applied months ahead",
+    "First job, or a master's application",
+    "Next role, planned a year ahead"
+  ],
+  skillCards: [
+    { title: "3 kW rooftop PV design", line: "Designed a 3 kW rooftop PV system with string layout, cable sizing and a payback estimate." },
+    { title: "ESP32 energy meter", line: "Built an ESP32 energy meter that logs voltage and current every second to a CSV file." },
+    { title: "Load flow in Python with pandapower", line: "Ran a load flow on the IEEE 14-bus network in Python and identified the weakest bus." }
+  ],
+  pairs: [
+    { weak: "Participated in a solar project.", strong: "Designed a 3 kW PV system and cut cable loss by 12%." },
+    { weak: "Member of IEEE student chapter.", strong: "Organised a hands-on workshop for 40 students on PCB design." }
+  ],
+  skills: [
+    { name: "Technical writing", what: "Writing so another engineer can repeat your work: what you did, what you measured, and what it means.", task: "Write a 2-page report on one lab, every month." },
+    { name: "English speaking", what: "Saying that same work out loud, clearly, in a few minutes.", task: "Present for 3 minutes in English to two classmates, every week." },
+    { name: "Excel", what: "A sheet for numbers and formulas, with one chart of a load or a lab result.", task: "Build a load-profile sheet with one chart." },
+    { name: "Python", what: "A short program that reads data and draws a plot, instead of doing it by hand.", task: "Plot one real dataset with pandas." },
+    { name: "Project management", what: "A list of tasks with dates, so the final-year project finishes on time.", task: "Write a dated task list for your final-year project." }
+  ],
+  message: "Dear [Name], I am a [year] electrical student at QUEST. I saw that you work at [company].\nCould I ask you two questions about how you started your career?\nThank you for your time. [Your name]",
+  semesterGuides: [
+    "Semester 1: protect your grades. The record starts now.",
+    "Semester 2: pick one skill and start one small project.",
+    "Semester 3: finish a project you can explain in two minutes.",
+    "Semester 4: ask one senior what a scholarship file needs.",
+    "Semester 5: book your English test this month.",
+    "Semester 6: write a one-page statement and get research experience.",
+    "Semester 7: the main round is open. Apply only if the file is ready.",
+    "Semester 8: this round is late. Prepare the next cycle, or a master's route."
+  ],
+  milestones: ["Grades", "English test", "Research experience", "Statement of purpose", "Application"],
+  /* verified:false shows an amber dot only while notes are open. */
+  countries: [
+    { id: "cn", name: "China", scholarship: "Chinese Government Scholarship (CSC)", site: "campuschina.org", lat: 39.9, lon: 116.4, need: "Eligibility and deadline: check the official site.", verified: false },
+    { id: "de", name: "Germany", scholarship: "DAAD", site: "daad.de", lat: 52.5, lon: 13.4, need: "Eligibility and deadline: check the official site.", verified: false },
+    { id: "tr", name: "Türkiye", scholarship: "Türkiye Burslari", site: "turkiyeburslari.gov.tr", lat: 39.9, lon: 32.9, need: "Eligibility and deadline: check the official site.", verified: false },
+    { id: "hu", name: "Hungary", scholarship: "Stipendium Hungaricum", site: "stipendiumhungaricum.hu", lat: 47.5, lon: 19.0, need: "Eligibility and deadline: check the official site.", verified: false }
+  ],
+  origin: { name: "Nawabshah", lat: 26.25, lon: 68.4 },
+  tasks: [
+    "Pick one skill and write the title of one real project.",
+    "Rewrite one CV line with a number in it.",
+    "Send one message to an alumnus."
+  ],
+  /* 3 to 5 bullets. Minutes match the talk clock. */
+  notes: [
+    ["1 min.", "Open notes with N. Only you change the three counts.", "Greet, thank the department, set the plan."],
+    ["2 min.", "Tap a bar for each raised hand.", "Read the bars aloud.", "Do not debate the result.", "The same counts return on the five-year slide."],
+    ["3 min.", "Let the line draw, then name each node.", "This is a student's path, not a biography.", "Each step is an application prepared months ahead.", "Pause on the internship and the first job."],
+    ["4 min.", "Ask them to pick one area, not three.", "Tap a card and read the CV line slowly.", "A finished project beats a list of courses.", "Give them the week task: write the project title."],
+    ["4 min.", "Flip the first pair. Ask which line they would trust.", "Point at the number: 3 kW, 12%.", "One page, updated every semester.", "Second pair: a role is not a result."],
+    ["4 min.", "Have them rate all five rows.", "On a tie, take the first skill in the list.", "Read the monthly task for the lowest score.", "Writing and speaking are selection skills."],
+    ["3 min.", "Read the three-line message.", "Copy is for the student who wants the text.", "One message this week is the action.", "Be useful before you ask for a favour."],
+    ["3 min.", "Walk the 18-month ticks.", "Semester 5 and 6: book the English test this month.", "Final year aims at the next cycle."],
+    ["5 min with the plan slide.", "Tap one country. Read only the official site.", "Do not state a deadline or a GPA.", "Amber dots mean the requirement line is still unverified.", "Schematic map, not a navigation chart."],
+    ["2 min.", "Read the closing line and stop.", "Three ticks are the week after the talk.", "Leave the card on screen for questions.", "Questions: 5 to 10 minutes."]
+  ]
+};
+
+/* Equirectangular crop: lon 0–130, lat 10–65. */
+function project(lat, lon, w, h) {
+  return [(lon - 0) / 130 * w, (65 - lat) / 55 * h];
+}
+
+const slides = [];
+const deck = document.getElementById("deck");
+
+function el(html) {
+  const d = document.createElement("div");
+  d.innerHTML = html.trim();
+  return d.firstElementChild;
+}
+
+function add(node) { slides.push(node); deck.appendChild(node); }
+
+/* 1 Title */
+add(el(`<section class="slide solo"><div>
+  <p class="kicker in">Invited talk</p>
+  <h1 class="in">IEEE STEP 2026, From Campus to Career</h1>
+  <p class="body in">Invited talk</p>
+  <p class="body in">20 October 2026</p>
+  <p class="body in speaker">Dr. Gordhan Das Valasai</p>
+  <p class="body in">Department of Environment Engineering, QUEST, Nawabshah</p>
+</div></section>`));
+
+/* 2 Poll */
+add(el(`<section class="slide"><div>
+  <p class="kicker in">Poll</p>
+  <h2 class="in">When you finish your degree, what do you want to do first?</h2>
+  <p class="body in">Raise your hand for one only. Be honest.</p>
+</div><div class="pollbox in"><div id="poll"></div><button class="reset" id="poll-reset" type="button">Reset</button></div></section>`));
+/* 3 Path */
+add(el(`<section class="slide solo"><div style="width:100%">
+  <p class="kicker in">Your path</p>
+  <h2 class="in">Every step came from an application prepared months ahead.</h2>
+  <svg class="route in" viewBox="0 0 880 160" id="route"></svg>
+</div></section>`));
+
+/* 3 Skill */
+add(el(`<section class="slide skill"><div>
+  <p class="kicker in">Skill</p>
+  <h2 class="in">Build one deep skill before graduation.</h2>
+  <p class="body in">Employers and scholarship committees hire for proven ability. Pick one area and finish one real project in it. A working project on your CV outweighs ten course titles.</p>
+  <div class="cards in" id="skills"></div>
+</div><div class="art in"><svg viewBox="0 0 420 460" aria-hidden="true">
+  <g>
+    <circle cx="78" cy="54" r="22" fill="#ffb020"/>
+    <path d="M78 18 v12 M108 30 l-8 8 M48 30 l8 8 M114 54 h-12 M42 54 h12" stroke="#ffb020" stroke-width="4" stroke-linecap="round"/>
+    <path d="M36 150 L150 96 L250 150" fill="none" stroke="#3d8bff" stroke-width="5"/>
+    <path d="M70 138 l18-12 v28 h-18 z M110 128 l22-14 v36 h-22 z M158 118 l22-14 v46 h-22 z" fill="#12306e" stroke="#2ee6c7" stroke-width="3"/>
+    <text x="36" y="184" fill="#f4f7ff" font-size="18" font-weight="700">3 kW rooftop PV</text>
+  </g>
+  <g transform="translate(0,200)">
+    <rect x="36" y="16" width="150" height="96" rx="12" fill="#102454" stroke="#3d8bff" stroke-width="4"/>
+    <rect x="52" y="32" width="70" height="40" rx="4" fill="#071433" stroke="#2ee6c7" stroke-width="3"/>
+    <path class="draw" d="M130 52 h28 M148 40 v24" stroke="#ffb020" stroke-width="3"/>
+    <circle cx="58" cy="92" r="5" fill="#2ee6c7"/><circle cx="78" cy="92" r="5" fill="#ffb020"/>
+    <text x="36" y="140" fill="#f4f7ff" font-size="18" font-weight="700">ESP32 energy meter</text>
+  </g>
+  <g transform="translate(0,340)">
+    <circle cx="56" cy="36" r="14" fill="#071433" stroke="#ffb020" stroke-width="4"/>
+    <circle cx="140" cy="36" r="14" fill="#071433" stroke="#3d8bff" stroke-width="4"/>
+    <circle cx="224" cy="36" r="14" fill="#071433" stroke="#2ee6c7" stroke-width="4"/>
+    <path class="draw" d="M70 36 H126 M154 36 H210" stroke="#2ee6c7" stroke-width="4"/>
+    <text x="36" y="78" fill="#f4f7ff" font-size="18" font-weight="700">Load flow in Python</text>
+  </g>
+</svg></div></section>`));
+
+/* 4 CV */
+add(el(`<section class="slide"><div>
+  <p class="kicker in">CV</p>
+  <h2 class="in">Write a CV and LinkedIn profile that show results.</h2>
+  <p class="body in">Replace "participated in" with "built, measured, delivered". Give numbers. Keep it to one page. Update it every semester.</p>
+  <div class="flip-scene in"><button class="flip" id="flip" type="button"><span class="face front" id="face-w"></span><span class="face back" id="face-s"></span></button></div>
+  <button class="pair in" id="pair-next" type="button">Next pair</button>
+  <div class="in"><button class="stat" type="button" data-to="3" data-suffix=" kW">3 kW</button> <button class="stat" type="button" data-to="12" data-suffix="%">12%</button></div>
+</div><div class="art in"><svg viewBox="0 0 340 420" aria-hidden="true">
+  <rect x="70" y="16" width="200" height="250" rx="12" fill="#102454" stroke="#ffb020" stroke-width="4"/>
+  <text x="170" y="48" text-anchor="middle" fill="#ffb020" font-size="18" font-weight="800">ONE PAGE</text>
+  <text x="92" y="92" fill="#f4f7ff" font-size="16">Participated in</text>
+  <path d="M88 86 L230 100" stroke="#ff5a5a" stroke-width="4"/>
+  <path d="M150 130 h70" stroke="#3d8bff" stroke-width="8" stroke-linecap="round"/>
+  <polygon points="228,122 248,134 228,146" fill="#3d8bff"/>
+  <text x="92" y="186" fill="#2ee6c7" font-size="18" font-weight="800">Designed 3 kW</text>
+  <text x="92" y="214" fill="#f4f7ff" font-size="16">Cut cable loss 12%</text>
+  <rect x="70" y="290" width="90" height="64" rx="12" fill="#ffb020"/>
+  <text x="115" y="330" text-anchor="middle" fill="#1a1204" font-size="22" font-weight="800">3 kW</text>
+  <rect x="180" y="290" width="90" height="64" rx="12" fill="#2ee6c7"/>
+  <text x="225" y="330" text-anchor="middle" fill="#071433" font-size="22" font-weight="800">12%</text>
+</svg></div></section>`));
+
+/* 5 Skills the degree misses */
+add(el(`<section class="slide habits"><div>
+  <p class="kicker in">Habits</p>
+  <h2 class="in">Learn the skills your degree does not teach.</h2>
+  <p class="body in">Technical writing, English, Excel and Python, and project management decide who gets selected. Write one short technical report each month and present it to your peers.</p>
+  <div class="rates in" id="rates"></div>
+  <p class="body in" id="rate-out" hidden></p>
+</div><div class="art in"><svg viewBox="0 0 360 260"><path d="M40 60 h100 l24 24 v120 H40 z" fill="#12306e" stroke="#3d8bff" stroke-width="4"/><path d="M140 60 v24 h24" fill="none" stroke="#ffb020" stroke-width="4"/><path d="M60 120 h70 M60 146 h54" stroke="#2ee6c7" stroke-width="5" stroke-linecap="round"/><ellipse cx="250" cy="110" rx="78" ry="46" fill="#102454" stroke="#ffb020" stroke-width="4"/><path d="M310 146 l30 40" stroke="#ffb020" stroke-width="4"/></svg></div></section>`));
+
+/* 6 Network */
+add(el(`<section class="slide people"><div>
+  <p class="kicker in">People</p>
+  <h2 class="in">Use IEEE and your network on purpose.</h2>
+  <p class="body in">Attend events, volunteer in a chapter, and talk to seniors and alumni who already work. Jobs, internships and recommendations come from people who have seen you work. Be useful first.</p>
+  <div class="msg in" id="msg"></div>
+  <button class="copy in" id="copy" type="button">Copy</button>
+  <p class="action in">Action: send one message this week.</p>
+</div><div class="art in"><svg viewBox="0 0 360 420" aria-hidden="true">
+  <g stroke="#3d8bff" stroke-width="4" fill="none">
+    <path d="M180 200 L180 70"/>
+    <path d="M180 200 L70 150"/>
+    <path d="M180 200 L290 150"/>
+    <path d="M180 200 L180 330"/>
+  </g>
+  <circle cx="180" cy="200" r="36" fill="#2ee6c7"/>
+  <text x="180" y="206" text-anchor="middle" fill="#071433" font-size="18" font-weight="800">You</text>
+  <circle cx="180" cy="70" r="28" fill="#102454" stroke="#ffb020" stroke-width="4"/>
+  <text x="180" y="40" text-anchor="middle" fill="#f4f7ff" font-size="16" font-weight="700">Alumnus</text>
+  <circle cx="70" cy="150" r="28" fill="#102454" stroke="#3d8bff" stroke-width="4"/>
+  <text x="70" y="210" text-anchor="middle" fill="#f4f7ff" font-size="16" font-weight="700">Senior</text>
+  <circle cx="290" cy="150" r="28" fill="#102454" stroke="#3d8bff" stroke-width="4"/>
+  <text x="290" y="210" text-anchor="middle" fill="#f4f7ff" font-size="16" font-weight="700">Chapter</text>
+  <circle cx="180" cy="330" r="28" fill="#102454" stroke="#2ee6c7" stroke-width="4"/>
+  <text x="180" y="380" text-anchor="middle" fill="#f4f7ff" font-size="16" font-weight="700">One message</text>
+</svg></div></section>`));
+
+/* 7 Timeline */
+add(el(`<section class="slide"><div>
+  <p class="kicker in">Five years</p>
+  <h2 class="in">Plan five years. Scholarships need 12 to 18 months.</h2>
+  <p class="body in">Decide early: industry, master's or PhD, or both in sequence. Students who start in third year win. Students who start in final year usually miss the deadlines.</p>
+  <p class="body in" id="room-said"></p>
+ <button class="stat in" type="button" data-from="12" data-to="18" data-suffix=" months">12 to 18 months</button>
+  <svg viewBox="0 0 640 36" class="in" id="time-svg"></svg>
+  <div class="miles in" id="miles"></div>
+  <p class="in"><strong>Which semester are you in?</strong></p>
+  <div class="sems in" id="sems"></div>
+  <p class="body in" id="sem-out" hidden></p>
+</div><div class="art in"><svg viewBox="0 0 320 240"><rect x="40" y="40" width="180" height="150" rx="12" fill="#102454" stroke="#3d8bff" stroke-width="4"/><path d="M40 80 h180" stroke="#ffb020" stroke-width="6"/><circle cx="80" cy="130" r="8" fill="#2ee6c7"/><path d="M230 70 l40-24 16 20 -36 28 z" fill="#ffb020"/><path d="M250 150 q30-40 50 0" fill="none" stroke="#2ee6c7" stroke-width="4"/></svg></div></section>`));
+
+/* 8 Map */
+add(el(`<section class="slide"><div>
+  <p class="kicker in">Scholarships</p>
+  <h2 class="in">Four countries, four scholarships.</h2>
+  <div class="cards" id="countries"></div>
+</div><div class="art"><svg id="map" viewBox="0 0 640 340"></svg><p>Schematic map</p></div></section>`));
+
+/* 9 Close */
+add(el(`<section class="slide close"><div>
+  <p class="kicker in">Close</p>
+  <h2 class="in">Your degree gets you the interview. Your skills, your habits and your network decide the career.</h2>
+  <div class="in tasks" id="tasks"><strong>Your next seven days</strong></div>
+</div><div class="art in"><svg viewBox="0 0 360 320" aria-hidden="true">
+  <g class="rays" fill="none" stroke="#ffb020" stroke-width="6" stroke-linecap="round">
+    <path d="M180 28 v28 M180 244 v28 M70 150 h28 M252 150 h28 M96 66 l20 20 M244 214 l20 20 M244 66 l-20 20 M116 214 l-20 20"/>
+  </g>
+  <g class="win">
+    <circle cx="180" cy="150" r="78" fill="#102454" stroke="#ffb020" stroke-width="8"/>
+    <path d="M140 152 l28 30 58-64" fill="none" stroke="#2ee6c7" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg></div></section>`));
+
+/* Poll */
+const pollBox = document.getElementById("poll");
+let counts = DATA.pollOptions.map(() => 0);
+try { const saved = JSON.parse(localStorage.getItem(DATA.pollKey) || "null"); if (Array.isArray(saved) && saved.length === 3) counts = saved.map(Number); } catch (e) {}
+function savePoll() { try { localStorage.setItem(DATA.pollKey, JSON.stringify(counts)); } catch (e) {} }
+function roomLine() {
+  return "This room said: " + DATA.pollOptions.map((n, i) => n + " " + counts[i]).join(", ");
+}
+function drawPoll() {
+  if (!pollBox) return;
+  pollBox.innerHTML = "";
+  const max = Math.max(1, ...counts);
+  DATA.pollOptions.forEach((name, i) => {
+    const col = document.createElement("button");
+    col.type = "button";
+    col.className = "col c" + i;
+    col.innerHTML = "<b></b><span class=\"track\"><i></i></span><em></em>";
+    col.querySelector("b").textContent = counts[i];
+    col.querySelector("i").style.height = (counts[i] / max * 100) + "%";
+    col.querySelector("em").textContent = name;
+    col.addEventListener("click", () => { counts[i] += 1; savePoll(); drawPoll(); paintRoom(); drawPollControls(); });
+    pollBox.appendChild(col);
+  });
+}
+function drawPollControls() {
+  const host = document.getElementById("poll-controls");
+  host.innerHTML = "";
+  DATA.pollOptions.forEach((name, i) => {
+    const minus = document.createElement("button");
+    minus.type = "button"; minus.className = "tap"; minus.textContent = "− " + name;
+    minus.addEventListener("click", () => { counts[i] = Math.max(0, counts[i] - 1); savePoll(); drawPoll(); paintRoom(); drawPollControls(); });
+    const plus = document.createElement("button");
+    plus.type = "button"; plus.className = "tap"; plus.textContent = "+ " + name;
+    plus.addEventListener("click", () => { counts[i] += 1; savePoll(); drawPoll(); paintRoom(); drawPollControls(); });
+    host.appendChild(minus);
+    host.appendChild(plus);
+  });
+  const reset = document.createElement("button");
+  reset.type = "button"; reset.className = "reset"; reset.textContent = "Reset";
+  reset.addEventListener("click", () => { counts = [0, 0, 0]; savePoll(); drawPoll(); paintRoom(); drawPollControls(); });
+  host.appendChild(reset);
+}
+function paintRoom() { const n = document.getElementById("room-said"); if (n) n.textContent = roomLine(); }
+drawPoll(); paintRoom(); drawPollControls();
+document.getElementById("poll-reset").onclick = () => { counts = [0, 0, 0]; savePoll(); drawPoll(); paintRoom(); drawPollControls(); };
+
+/* Route: a wave through the four stops, with a dot that keeps moving. */
+const route = document.getElementById("route");
+const stops = [[90, 120], [320, 48], [560, 132], [840, 56]];
+const d = "M 90 120 C 180 20, 240 20, 320 48 C 420 84, 470 170, 560 132 C 660 90, 740 16, 840 56";
+route.setAttribute("viewBox", "0 0 960 230");
+route.innerHTML = '<path id="route-path" class="draw" d="' + d + '"/>' +
+  '<circle class="traveler" r="9" fill="#ffb020" cx="0" cy="0"/>' +
+  stops.map((p, i) => {
+    const parts = DATA.pathNodes[i].split(", ");
+    return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="11" fill="#071433" stroke="#ffb020" stroke-width="4"/>' +
+      '<text x="' + p[0] + '" y="' + (p[1] + 32) + '" text-anchor="middle" fill="#f4f7ff" font-size="16" font-weight="700">' + parts[0] + "</text>" +
+      '<text x="' + p[0] + '" y="' + (p[1] + 52) + '" text-anchor="middle" fill="#2ee6c7" font-size="14">' + (parts[1] || "") + "</text>";
+  }).join("");
+const traveler = route.querySelector(".traveler");
+traveler.style.offsetPath = 'path("' + d + '")';
+
+/* Skill cards */
+const skillBox = document.getElementById("skills");
+DATA.skillCards.forEach((c) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "card";
+  b.innerHTML = c.title + '<div class="reveal"></div>';
+  b.querySelector(".reveal").textContent = c.line;
+  b.addEventListener("click", () => {
+    const open = b.classList.contains("open");
+    skillBox.querySelectorAll(".card").forEach((x) => x.classList.remove("open"));
+    if (!open) b.classList.add("open");
+  });
+  skillBox.appendChild(b);
+});
+
+/* Flip pairs */
+let pair = 0;
+function showPair() {
+  document.getElementById("face-w").textContent = DATA.pairs[pair].weak;
+  document.getElementById("face-s").textContent = DATA.pairs[pair].strong;
+  document.getElementById("flip").classList.remove("flipped");
+}
+document.getElementById("flip").onclick = () => document.getElementById("flip").classList.toggle("flipped");
+document.getElementById("pair-next").onclick = () => { pair = (pair + 1) % DATA.pairs.length; showPair(); };
+showPair();
+
+/* Ratings */
+const rateBox = document.getElementById("rates");
+const rated = DATA.skills.map(() => 0);
+DATA.skills.forEach((s, i) => {
+  const row = document.createElement("div");
+  row.className = "rate";
+  const lab = document.createElement("button");
+  lab.type = "button";
+  lab.className = "skill-name";
+  lab.textContent = s.name;
+  lab.addEventListener("click", () => {
+    rateBox.querySelectorAll(".skill-name").forEach((n) => n.classList.remove("on"));
+    lab.classList.add("on");
+    const out = document.getElementById("rate-out");
+    out.hidden = false;
+    out.textContent = s.name + ": " + s.what;
+  });
+  row.appendChild(lab);
+  for (let n = 1; n <= 5; n++) {
+    const dot = document.createElement("button");
+    dot.type = "button"; dot.className = "dot"; dot.textContent = String(n);
+    dot.addEventListener("click", () => {
+      rated[i] = n;
+      [...row.querySelectorAll(".dot")].forEach((d, k) => d.classList.toggle("on", k < n));
+      if (rated.every((v) => v > 0)) {
+        let bi = 0;
+        rated.forEach((v, k) => { if (v < rated[bi]) bi = k; });
+        const out = document.getElementById("rate-out");
+        out.hidden = false;
+        out.textContent = DATA.skills[bi].name + ": " + DATA.skills[bi].task;
+      }
+    });
+    row.appendChild(dot);
+  }
+  rateBox.appendChild(row);
+});
+
+/* Message */
+document.getElementById("msg").textContent = DATA.message;
+document.getElementById("copy").onclick = async () => {
+  const node = document.getElementById("msg");
+  try {
+    await navigator.clipboard.writeText(DATA.message);
+  } catch (e) {
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+};
+
+/* Timeline SVG */
+const tsvg = document.getElementById("time-svg");
+let ticks = "";
+for (let m = 0; m <= 18; m += 3) {
+  const x = 20 + m / 18 * 600;
+  ticks += '<line x1="' + x + '" y1="8" x2="' + x + '" y2="20" stroke="#3d8bff"/>';
+  ticks += '<text x="' + x + '" y="34" text-anchor="middle" fill="#f4f7ff" font-size="11">' + m + "</text>";
+}
+tsvg.innerHTML = '<line class="draw" x1="20" y1="14" x2="620" y2="14" stroke="#2ee6c7" stroke-width="4"/>' + ticks;
+document.getElementById("miles").innerHTML = DATA.milestones.map((m) => '<div class="mile">' + m + "</div>").join("");
+const semBox = document.getElementById("sems");
+for (let s = 1; s <= 8; s++) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "sem"; b.textContent = String(s);
+  b.addEventListener("click", () => {
+    semBox.querySelectorAll(".sem").forEach((x) => x.classList.remove("on"));
+    b.classList.add("on");
+    const out = document.getElementById("sem-out");
+    out.hidden = false;
+    out.textContent = DATA.semesterGuides[s - 1];
+  });
+  semBox.appendChild(b);
+}
+
+/* Map */
+const MAP_W = 620, MAP_H = 300;
+
+function arcPath(a, b) {
+  const midLat = (a.lat + b.lat) / 2 + 8;
+  const midLon = (a.lon + b.lon) / 2;
+  const [x1, y1] = project(a.lat, a.lon, MAP_W, MAP_H);
+  const [x2, y2] = project(b.lat, b.lon, MAP_W, MAP_H);
+  const [cx, cy] = project(midLat, midLon, MAP_W, MAP_H);
+  return "M" + x1 + " " + y1 + " Q" + cx + " " + cy + " " + x2 + " " + y2;
+}
+
+/* Country flags */
+const FLAGS = {
+  cn: '🇨🇳', de: '🇩🇪', tr: '🇹🇷', hu: '🇭🇺', pk: '🇵🇰'
+};
+
+const map = document.getElementById("map");
+let svg = '<rect width="620" height="300" fill="#071433"/>';
+
+/* Draw flight arcs */
+DATA.countries.forEach((c) => {
+  svg += '<path class="flight" data-id="' + c.id + '" d="' + arcPath(DATA.origin, c) + '" fill="none" stroke="#ffb020" stroke-width="2"/>';
+});
+
+/* Origin marker (Pakistan) - flag only */
+const [ox, oy] = project(DATA.origin.lat, DATA.origin.lon, MAP_W, MAP_H);
+svg += '<text x="' + ox + '" y="' + (oy + 15) + '" text-anchor="middle" fill="#f4f7ff" font-size="56">🇵🇰</text>';
+
+/* Destination markers - flags only */
+DATA.countries.forEach((c) => {
+  const [x, y] = project(c.lat, c.lon, MAP_W, MAP_H);
+  svg += '<text class="pin" data-id="' + c.id + '" x="' + x + '" y="' + (y + 18) + '" text-anchor="middle" fill="#f4f7ff" font-size="56">' + FLAGS[c.id] + '</text>';
+  svg += '<text x="' + x + '" y="' + (y + 50) + '" text-anchor="middle" fill="#f4f7ff" font-size="14" font-weight="700">' + c.name + "</text>";
+});
+map.innerHTML = svg;
+const cBox = document.getElementById("countries");
+DATA.countries.forEach((c) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "card";
+  b.innerHTML = "<strong></strong> <i class=\"unverified\"></i><div class=\"reveal\"></div>";
+  b.querySelector("strong").textContent = c.name;
+  b.querySelector(".reveal").textContent = c.scholarship + " — " + c.need + " " + c.site;
+  b.addEventListener("click", () => {
+    cBox.querySelectorAll(".card").forEach((x) => x.classList.remove("open"));
+    b.classList.add("open");
+    map.querySelectorAll(".flight, .pin").forEach((n) => n.classList.toggle("hot", n.getAttribute("data-id") === c.id));
+  });
+  cBox.appendChild(b);
+});
+
+/* Tasks */
+const taskBox = document.getElementById("tasks");
+DATA.tasks.forEach((t, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "tap task";
+  b.textContent = (i + 1) + ". " + t;
+  b.addEventListener("click", () => b.classList.toggle("done"));
+  taskBox.appendChild(b);
+});
+
+/* Count-up stats */
+document.querySelectorAll("button.stat").forEach((btn) => {
+  const label = btn.textContent;
+  btn.addEventListener("click", () => {
+    const from = Number(btn.dataset.from || 0);
+    const to = Number(btn.dataset.to);
+    const suffix = btn.dataset.suffix || "";
+    const start = performance.now();
+    function frame(now) {
+      const t = Math.min(1, (now - start) / 700);
+      btn.textContent = Math.round(from + (to - from) * t) + suffix;
+      if (t < 1) requestAnimationFrame(frame);
+      else setTimeout(() => { btn.textContent = label; }, 800);
+    }
+    requestAnimationFrame(frame);
+  });
+});
+
+/* Navigation */
+let i = 0;
+const num = document.getElementById("num");
+const bar = document.getElementById("bar");
+const notes = document.getElementById("notes");
+function go(n) {
+  i = (n + slides.length) % slides.length;
+  slides.forEach((s, k) => s.classList.toggle("on", k === i));
+  num.textContent = (i + 1) + " / " + slides.length;
+  bar.style.width = ((i + 1) / slides.length * 100) + "%";
+  document.getElementById("note-list").innerHTML = DATA.notes[i].map((b) => "<li>" + b + "</li>").join("");
+  slides[i].querySelectorAll(".in").forEach((node, k) => node.style.setProperty("--i", k));
+}
+document.getElementById("next").onclick = () => go(i + 1);
+document.getElementById("prev").onclick = () => go(i - 1);
+
+/* Overview thumbnails */
+const thumbs = document.getElementById("thumbs");
+const overview = document.getElementById("overview");
+slides.forEach((s, n) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "thumb tap";
+  const wrap = document.createElement("div");
+  wrap.className = "scale";
+  const clone = s.cloneNode(true);
+  clone.classList.remove("slide");
+  clone.style.display = "grid";
+  clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+  wrap.appendChild(clone);
+  b.appendChild(wrap);
+  b.addEventListener("click", () => { go(n); overview.classList.remove("open"); });
+  thumbs.appendChild(b);
+});
+document.getElementById("grid").onclick = () => overview.classList.toggle("open");
+
+/* Presenter keys */
+let timerMode = 0, elapsed = 0, last = 0, rafId = 0;
+const timer = document.getElementById("timer");
+function paintTimer() {
+  const sec = Math.floor(elapsed / 1000);
+  timer.textContent = Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+  timer.classList.toggle("red", sec >= 30 * 60);
+  timer.classList.toggle("amber", sec >= 25 * 60 && sec < 30 * 60);
+}
+function tick(now) {
+  if (timerMode !== 1) return;
+  elapsed += now - last; last = now; paintTimer();
+  rafId = requestAnimationFrame(tick);
+}
+function onTimerKey() {
+  if (timerMode === 0) { timerMode = 1; timer.classList.add("show"); last = performance.now(); rafId = requestAnimationFrame(tick); }
+  else if (timerMode === 1) { timerMode = 2; cancelAnimationFrame(rafId); }
+  else { timerMode = 0; elapsed = 0; timer.classList.remove("show", "amber", "red"); paintTimer(); }
+}
+document.getElementById("full").onclick = () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+};
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); go(i + 1); }
+  if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(i - 1); }
+  if (e.key === "Escape") overview.classList.remove("open");
+  if (e.key === "n" || e.key === "N") { notes.classList.toggle("open"); document.body.classList.toggle("notes-open"); }
+  if (e.key === "f" || e.key === "F") document.getElementById("full").click();
+  if (e.key === "t" || e.key === "T") onTimerKey();
+});
+
+let x0 = null, y0 = null;
+deck.addEventListener("pointerdown", (e) => {
+  if (e.target.closest("button, a, input, .flip")) { x0 = null; return; }
+  x0 = e.clientX; y0 = e.clientY;
+});
+window.addEventListener("pointerup", (e) => {
+  if (x0 == null) return;
+  const dx = e.clientX - x0, dy = e.clientY - y0;
+  if (Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? i + 1 : i - 1);
+  x0 = null;
+});
+
+go(0);
+</script>
+</body>
+</html>
